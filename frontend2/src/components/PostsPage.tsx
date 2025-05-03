@@ -124,7 +124,7 @@ const PostsPage: React.FC = () => {
               <p className="text-white mb-4">{post.content}</p>
               {post.media_url && (
   <div className="mb-4">
-    {post.media_url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+    {post.media_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
       <img
         src={`http://localhost:5000${post.media_url}`}
         alt="Post media"

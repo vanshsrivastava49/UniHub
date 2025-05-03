@@ -1,47 +1,74 @@
-import React, { useState } from 'react';
-import SearchWindow from './SearchWindow';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import Header from './Header';
+interface User {
+  reg_no: string;
+  fullname: string;
+  email: string;
+  course: string;
+  enrolledyear: string;
+  gender: string;
+  college_name: string;
+  address: string;
+}
 
 const SearchPage: React.FC = () => {
-  const [showProfile, setShowProfile] = useState(false);
-  const [regNo, setRegNo] = useState('');
+  const { reg_no } = useParams<{ reg_no: string }>();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const handleViewProfile = () => {
-    if (regNo.trim() !== '') {
-      setShowProfile(true);
-    } else {
-      alert('Please enter a registration number.');
-    }
-  };
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/user/search/${reg_no}`);
+        setUser(response.data);
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'User not found');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (reg_no) fetchUser();
+  }, [reg_no]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
-      <div className="max-w-4xl mx-auto pt-20 text-center">
-        <h1 className="text-4xl font-bold neon-text mb-6">Welcome to UniHub</h1>
-        <p className="text-gray-400 mb-6">Search and view student profiles across the campus.</p>
-        
-        <input
-          type="text"
-          placeholder="Enter Registration Number"
-          value={regNo}
-          onChange={(e) => setRegNo(e.target.value)}
-          className="px-4 py-2 mb-4 rounded-full text-black w-72 outline-none focus:ring-2 focus:ring-[#FFD700]"
-        />
-        <br />
-        <button
-          onClick={handleViewProfile}
-          className="bg-[#FFD700] text-black font-semibold px-6 py-3 rounded-full hover:shadow-[0_0_15px_#FFD700] transition-all"
-        >
-          View Student Profile
-        </button>
+    <div className="min-h-screen pt-32 pb-10  bg-gradient-to-br from-[#5D2F99] via-[#D53A74] to-[#1C89E7] animate-gradient">
+      <Header />
+      <div className="max-w-3xl mx-auto bg-black/40 backdrop-blur-md rounded-xl p-8 shadow-xl border border-[#FFD700]/30">
+        {loading ? (
+          <p className="text-center text-lg text-gray-300">Searching for student info...</p>
+        ) : error ? (
+          <p className="text-center text-red-400 text-lg">{error}</p>
+        ) : (
+          <>
+            <h1 className="text-3xl font-bold mb-6 text-[#FFD700] neon-text text-center">
+              Student Details
+            </h1>
+            <div className="space-y-4 text-white/90">
+              <InfoItem label="Registration Number" value={user?.reg_no} />
+              <InfoItem label="Full Name" value={user?.fullname} />
+              <InfoItem label="Email" value={user?.email} />
+              <InfoItem label="Course" value={user?.course} />
+              <InfoItem label="Enrolled Year" value={user?.enrolledyear} />
+              <InfoItem label="Gender" value={user?.gender} />
+              <InfoItem label="College" value={user?.college_name} />
+              <InfoItem label="Address" value={user?.address} />
+            </div>
+          </>
+        )}
       </div>
-
-      {showProfile && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50">
-          <SearchWindow regNo={regNo} onClose={() => setShowProfile(false)} />
-        </div>
-      )}
     </div>
   );
 };
+
+const InfoItem = ({ label, value }: { label: string; value?: string }) => (
+  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-white/10 pb-2">
+    <span className="font-semibold">{label}:</span>
+    <span>{value || 'N/A'}</span>
+  </div>
+);
 
 export default SearchPage;
