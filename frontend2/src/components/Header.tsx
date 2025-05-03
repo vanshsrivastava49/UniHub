@@ -21,7 +21,6 @@ const Header = () => {
             <Link to="/" className="text-2xl font-bold text-white mr-8 neon-text">UniHub</Link>
             <nav className="hidden md:flex space-x-8">
               <NavLink icon={<Calendar className="w-5 h-5" />} text="Events" to="/events" />
-              <NavLink icon={<Users className="w-5 h-5" />} text="Clubs" to="/clubs" />
               <NavLink icon={<MessageSquare className="w-5 h-5" />} text="Messages" to="/messages" />
               <NavLink icon={<FileText className="w-5 h-5" />} text="Posts" to="/posts" />
               <NavLink icon={<User className="w-5 h-5" />} text="Profile" to="/dashboard" />

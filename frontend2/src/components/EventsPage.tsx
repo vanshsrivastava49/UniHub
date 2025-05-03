@@ -6,45 +6,17 @@ const EventsPage: React.FC = () => {
   const events = [
     {
       id: 1,
-      title: "Tech Fest 2025",
+      title: "Milan",
       date: "March 15, 2025",
-      description: "Annual technology festival featuring coding competitions, robotics workshops, and tech talks.",
+      description: "Milan is the annual national-level cultural festival organized by the Directorate of Student Affairs of SRM Institute of Science and Technology.",
       image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"
     },
     {
       id: 2,
-      title: "Cultural Night",
+      title: "Aarush",
       date: "April 5, 2025",
-      description: "A celebration of diverse cultures through music, dance, and traditional performances.",
+      description: "A national-level technical symposium organized by the SRM Institute of Science and Technology.",
       image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80"
-    },
-    {
-      id: 3,
-      title: "Sports Meet",
-      date: "May 10, 2025",
-      description: "Inter-college sports competition featuring various athletic events and team sports.",
-      image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80"
-    },
-    {
-      id: 4,
-      title: "Career Fair",
-      date: "June 2, 2025",
-      description: "Connect with potential employers and explore job opportunities after graduation.",
-      image: "https://images.unsplash.com/photo-1560439514-4e9645039924?auto=format&fit=crop&w=800&q=80"
-    },
-    {
-      id: 5,
-      title: "Science Symposium",
-      date: "June 15, 2025",
-      description: "A gathering of scientific minds to discuss breakthroughs and research in various fields.",
-      image: "https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=800&q=80"
-    },
-    {
-      id: 6,
-      title: "Alumni Meetup",
-      date: "July 8, 2025",
-      description: "Network with graduates and learn from their experiences in the professional world.",
-      image: "https://images.unsplash.com/photo-1515169067868-5387ec356754?auto=format&fit=crop&w=800&q=80"
     }
   ];
 
@@ -54,7 +26,7 @@ const EventsPage: React.FC = () => {
       <div className="max-w-7xl mx-auto py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-white neon-text">Campus Events</h2>
-          <p className="text-gray-300 mt-2">Discover and register for exciting events happening on campus this semester</p>
+          <p className="text-gray-300 mt-2">Discover exciting events happening on campus this semester</p>
         </div>
         
         {/* Event Filters */}

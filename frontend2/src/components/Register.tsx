@@ -82,15 +82,22 @@ const RegisterPage: React.FC = () => {
             
             <div>
               <label htmlFor="course" className="block text-white mb-2">Course</label>
-              <input
-                type="text"
+              <select
                 id="course"
                 name="course"
                 value={form.course}
                 onChange={handleChange}
                 className="w-full bg-white/10 border border-gray-600 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#FFD700]"
                 required
-              />
+              >
+                <option value="" className="text-black">Select Course</option>
+                <option value="cse core" className="text-black">CSE Core</option>
+                <option value="ai/ml" className="text-black">CSE AI/ML</option>
+                <option value="dsbs" className="text-black">CSE DSBS</option>
+                <option value="ece" className="text-black">ECE</option>
+                <option value="eee" className="text-black">EEE</option>
+                <option value="mech" className="text-black">Mechanical</option>
+              </select>
             </div>
             
             <div>
@@ -131,11 +138,11 @@ const RegisterPage: React.FC = () => {
                 className="w-full bg-white/10 border border-gray-600 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#FFD700]"
                 required
               >
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-                <option value="prefer_not_to_say">Prefer not to say</option>
+                <option value="" className="text-black">Select Gender</option>
+                <option value="male" className="text-black">Male</option>
+                <option value="female" className="text-black">Female</option>
+                <option value="other" className="text-black">Other</option>
+                <option value="prefer_not_to_say" className="text-black">Prefer not to say</option>
               </select>
             </div>
             
@@ -151,7 +158,6 @@ const RegisterPage: React.FC = () => {
                 required
               />
             </div>
-            
             <div>
               <label htmlFor="password" className="block text-white mb-2">Password</label>
               <input
