@@ -45,7 +45,7 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen">
+    <div className="min-h-screen pt-20 pb-20">
 <Header/>
     <div className="min-h-screen pt-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto bg-black/30 backdrop-blur-md rounded-lg p-8 my-8">

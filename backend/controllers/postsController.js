@@ -14,14 +14,11 @@ exports.createPost = (req, res) => {
   if (req.file) {
     media_url = `/uploads/${req.file.filename}`;
   }
-  // Log the incoming request data for debugging
   console.log('Received post request:', { content, email });
 
   if (!content || !email) {
     return res.status(400).json({ error: 'Content and email are required' });
   }
-
-  // First get user_id from email
   const userQuery = 'SELECT id FROM user WHERE email = ?';
   db.query(userQuery, [email], (err, userResults) => {
     if (err) {
@@ -49,7 +46,6 @@ exports.createPost = (req, res) => {
     });
   });
 };
-
 exports.getPosts = (req, res) => {
   const query = `
     SELECT 

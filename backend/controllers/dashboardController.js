@@ -7,7 +7,18 @@ exports.getAllUsers = (req, res) => {
   if (!email) {
     return res.status(400).json({ error: 'Email is required' });
   }
-  const query = 'SELECT * FROM user where email=?';
+  const query =` 
+    SELECT 
+      u.reg_no, 
+      u.fullname, 
+      u.email, 
+      u.course, 
+      u.enrolledyear, 
+      u.gender,
+      c.college_name
+    FROM user u
+    JOIN college c ON u.collegeid = c.collegeid
+    WHERE u.email = ?`;
 
   db.query(query, [email], (err, results) => {
     if (err) {

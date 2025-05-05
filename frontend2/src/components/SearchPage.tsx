@@ -17,7 +17,7 @@ const SearchPage: React.FC = () => {
   const { reg_no } = useParams<{ reg_no: string }>();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -33,9 +33,8 @@ const SearchPage: React.FC = () => {
 
     if (reg_no) fetchUser();
   }, [reg_no]);
-
   return (
-    <div className="min-h-screen pt-32 pb-10  bg-gradient-to-br from-[#5D2F99] via-[#D53A74] to-[#1C89E7] animate-gradient">
+    <div className="min-h-screen pt-32 pb-10 bg-gradient-to-br from-[#5D2F99] via-[#D53A74] to-[#1C89E7] animate-gradient">
       <Header />
       <div className="max-w-3xl mx-auto bg-black/40 backdrop-blur-md rounded-xl p-8 shadow-xl border border-[#FFD700]/30">
         {loading ? (

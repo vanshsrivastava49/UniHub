@@ -9,6 +9,8 @@ import RegisterPage from './components/Register';
 import LoginPage from './components/LoginPage';
 import DashboardPage from './components/DashboardPage'; 
 import PostsPage from './components/PostsPage';
+import CommunityPage from './components/Community';
+import ChatsPage from './components/ChatsPage';
 import './App.css';
 
 function App() {
@@ -23,6 +25,8 @@ function App() {
           <Route path="/Login" element={<LoginPage/>}/>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/posts" element={<PostsPage/>}/>
+          <Route path="/community" element={<CommunityPage />} />
+          <Route path="/chats" element={<ChatsPage />} />
         </Routes>
       </div>
     </Router>

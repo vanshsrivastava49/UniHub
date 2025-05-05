@@ -23,7 +23,6 @@ exports.register = async (req, res) => {
   }
 
   try {
-    // Check if email or reg_no already exists
     const checkQuery = 'SELECT * FROM user WHERE email = ? OR reg_no = ?';
     db.query(checkQuery, [email, reg_no], async (err, existingUsers) => {
       if (err) {
@@ -34,11 +33,7 @@ exports.register = async (req, res) => {
       if (existingUsers.length > 0) {
         return res.status(409).json({ error: 'User already exists with this email or registration number' });
       }
-
-      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Insert into user table
       const userQuery = `
         INSERT INTO user (fullname, reg_no, course, enrolledyear, password, email, gender, collegeid)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -54,8 +49,6 @@ exports.register = async (req, res) => {
           }
 
           const userId = userResult.insertId;
-
-          // Insert into login table
           const loginQuery = `
             INSERT INTO login (user_id, email, password)
             VALUES (?, ?, ?)
@@ -104,12 +97,10 @@ exports.login = (req, res) => {
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-
-    // Generate JWT token
     const token = jwt.sign(
       { user_id: user.user_id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' } // Token expires in 1 hour
+      { expiresIn: '1h' }
     );
 
     res.status(200).json({ message: 'Login successful', token });

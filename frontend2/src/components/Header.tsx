@@ -1,7 +1,15 @@
 // src/components/Header.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MessageSquare, Bell, Search, User, Calendar, Users, Heart, FileText } from 'lucide-react';
+import {
+  MessageSquare,
+  Bell,
+  Search,
+  User,
+  Calendar,
+  Users,
+  FileText,
+} from 'lucide-react';
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,11 +31,13 @@ const Header = () => {
         <div className="flex justify-between items-center py-4">
           {/* Left: Brand & Navigation */}
           <div className="flex items-center">
-            <Link to="/" className="text-2xl font-bold text-white mr-8 neon-text">UniHub</Link>
+            <Link to="/" className="text-2xl font-bold text-white mr-8 neon-text">
+              UniHub
+            </Link>
             <nav className="hidden md:flex space-x-8">
               <NavLink icon={<Calendar className="w-5 h-5" />} text="Events" to="/events" />
               <NavLink icon={<Users className="w-5 h-5" />} text="Community" to="/community" />
-              <NavLink icon={<MessageSquare className="w-5 h-5" />} text="Messages" to="/messages" />
+              <NavLink icon={<MessageSquare className="w-5 h-5" />} text="Messages" to="/chats" />
               <NavLink icon={<FileText className="w-5 h-5" />} text="Posts" to="/posts" />
               <NavLink icon={<User className="w-5 h-5" />} text="Profile" to="/dashboard" />
             </nav>
@@ -47,7 +57,7 @@ const Header = () => {
                 type="submit"
                 className="absolute right-3 top-1/2 transform -translate-y-1/2"
               >
-                <Search className="w-5 h-5 text-gray-300" />
+                <Search className="w-5 h-5 text-gray-300 cursor-pointer" />
               </button>
             </form>
 
