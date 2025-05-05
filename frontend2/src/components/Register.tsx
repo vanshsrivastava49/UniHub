@@ -28,17 +28,15 @@ const RegisterPage: React.FC = () => {
     email: '',
     password: ''
   });
-  
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-  
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
       await axios.post('http://localhost:5000/api/auth/register', form);
       alert('Registration successful');
-      navigate('/'); // Navigate to home page after successful registration
+      navigate('/');
     } catch (error: any) {
       alert('Registration failed: ' + (error.response?.data?.error || 'Unknown error'));
     }

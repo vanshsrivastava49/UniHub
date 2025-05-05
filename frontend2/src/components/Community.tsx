@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Header from './Header';
-
 interface Community {
   community_id: number;
   community_name: string;
   member_count: number;
 }
-
 const CommunityPage = () => {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [joined, setJoined] = useState<number[]>([]);
-
-  // Fetch communities on component mount
   useEffect(() => {
     const fetchCommunities = async () => {
       try {
@@ -22,15 +18,12 @@ const CommunityPage = () => {
         console.error('Error fetching communities', err);
       }
     };
-
     fetchCommunities();
   }, []);
-
-  // Join a community
   const joinCommunity = async (id: number) => {
     try {
-      await axios.post(`http://localhost:5000/api/communities/join/${id}`); // Full URL to backend
-      setJoined((prev) => [...prev, id]); // Mark the community as joined
+      await axios.post(`http://localhost:5000/api/communities/join/${id}`);
+      setJoined((prev) => [...prev, id]);
       setCommunities((prev) =>
         prev.map((c) =>
           c.community_id === id
