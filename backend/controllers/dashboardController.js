@@ -1,8 +1,6 @@
 const db = require('../models/db');
-
-// Get all user data for the dashboard
 exports.getAllUsers = (req, res) => {
-    const { email } = req.query; // Get email from query parameters
+    const { email } = req.query;
   
   if (!email) {
     return res.status(400).json({ error: 'Email is required' });

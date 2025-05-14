@@ -1,8 +1,8 @@
-// controllers/communityController.js
-const db = require('../models/db');  // Assuming you're using MySQL for database queries
+
+const db = require('../models/db');
 
 exports.getAllCommunities = (req, res) => {
-  const query = 'SELECT * FROM community';  // Your database query
+  const query = 'SELECT * FROM community'; 
 
   db.query(query, (err, results) => {
     if (err) {
@@ -10,6 +10,6 @@ exports.getAllCommunities = (req, res) => {
       return res.status(500).json({ error: 'Database error' });
     }
 
-    res.status(200).json(results);  // Send the result as a JSON response
+    res.status(200).json(results); 
   });
 };

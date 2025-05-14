@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import Header from './Header';
 interface User {
+  id: number; // User ID
   reg_no: string;
   fullname: string;
   email: string;
