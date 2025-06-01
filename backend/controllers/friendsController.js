@@ -1,16 +1,13 @@
 const pool = require('../models/db');
 
-// Send a friend request
 exports.sendFriendRequest = async (req, res) => {
     const { user_id, friend_user_id } = req.body;
   
-    // Validate if both user_id and friend_user_id are provided
     if (!user_id || !friend_user_id) {
       return res.status(400).json({ message: 'User ID and Friend User ID are required' });
     }
   
     try {
-      // Check if the friend request already exists
       const [existing] = await pool.query(
         'SELECT * FROM friends WHERE user_id = ? AND friend_user_id = ?',
         [user_id, friend_user_id]
@@ -19,8 +16,6 @@ exports.sendFriendRequest = async (req, res) => {
       if (existing.length > 0) {
         return res.status(400).json({ message: 'Friend request already sent or exists' });
       }
-  
-      // Insert the new friend request
       await pool.query(
         'INSERT INTO friends (user_id, friend_user_id, status) VALUES (?, ?, ?)',
         [user_id, friend_user_id, 'pending']
@@ -32,8 +27,7 @@ exports.sendFriendRequest = async (req, res) => {
       res.status(500).json({ message: 'Server error' });
     }
   };
-  
-// Get all pending requests for a user
+
 exports.getPendingRequests = async (req, res) => {
   const { user_id } = req.params;
 
