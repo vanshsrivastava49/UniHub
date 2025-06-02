@@ -1,4 +1,3 @@
-
 const db = require('../models/db');
 
 exports.getAllCommunities = (req, res) => {
