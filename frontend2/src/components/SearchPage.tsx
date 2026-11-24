@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import Header from './Header';
+
 interface User {
-  id: number; // User ID
+  id: number;
   reg_no: string;
   fullname: string;
-  email: string;
   course: string;
   enrolledyear: string;
   gender: string;
@@ -19,14 +19,20 @@ const SearchPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [requestStatus, setRequestStatus] = useState<string>('');
 
   useEffect(() => {
     const fetchUser = async () => {
+      // Reset state so searching a second RA number doesn't show stale results
+      setLoading(true);
+      setError('');
+      setUser(null);
+      setRequestStatus('');
       try {
-        const response = await axios.get(`http://localhost:5000/api/user/search/${reg_no}`);
+        const response = await api.get(`/api/user/search/${encodeURIComponent(reg_no!)}`);
         setUser(response.data);
       } catch (err: any) {
-        setError(err.response?.data?.message || 'User not found');
+        setError(err.response?.data?.error || 'User not found');
       } finally {
         setLoading(false);
       }
@@ -34,6 +40,17 @@ const SearchPage: React.FC = () => {
 
     if (reg_no) fetchUser();
   }, [reg_no]);
+
+  const sendFriendRequest = async () => {
+    if (!user) return;
+    try {
+      await api.post('/api/friends/send', { friend_user_id: user.id });
+      setRequestStatus('Friend request sent');
+    } catch (err: any) {
+      setRequestStatus(err.response?.data?.error || 'Could not send friend request');
+    }
+  };
+
   return (
     <div className="min-h-screen pt-32 pb-10 bg-gradient-to-br from-[#5D2F99] via-[#D53A74] to-[#1C89E7] animate-gradient">
       <Header />
@@ -50,12 +67,21 @@ const SearchPage: React.FC = () => {
             <div className="space-y-4 text-white/90">
               <InfoItem label="Registration Number" value={user?.reg_no} />
               <InfoItem label="Full Name" value={user?.fullname} />
-              <InfoItem label="Email" value={user?.email} />
               <InfoItem label="Course" value={user?.course} />
               <InfoItem label="Enrolled Year" value={user?.enrolledyear} />
               <InfoItem label="Gender" value={user?.gender} />
               <InfoItem label="College" value={user?.college_name} />
               <InfoItem label="Address" value={user?.address} />
+            </div>
+
+            <div className="mt-8 text-center">
+              <button
+                onClick={sendFriendRequest}
+                className="bg-[#FFD700] text-black font-semibold px-6 py-2 rounded-full hover:shadow-[0_0_15px_#FFD700] transition-all"
+              >
+                Add Friend
+              </button>
+              {requestStatus && <p className="text-white mt-3">{requestStatus}</p>}
             </div>
           </>
         )}

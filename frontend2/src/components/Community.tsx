@@ -1,38 +1,50 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import Header from './Header';
+
 interface Community {
   community_id: number;
   community_name: string;
   member_count: number;
+  joined: boolean;
 }
+
 const CommunityPage = () => {
   const [communities, setCommunities] = useState<Community[]>([]);
-  const [joined, setJoined] = useState<number[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchCommunities = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/communities');
+        const res = await api.get('/api/communities');
         setCommunities(res.data);
       } catch (err) {
         console.error('Error fetching communities', err);
+        setError('Failed to load communities');
       }
     };
     fetchCommunities();
   }, []);
+
   const joinCommunity = async (id: number) => {
     try {
-      await axios.post(`http://localhost:5000/api/communities/join/${id}`);
-      setJoined((prev) => [...prev, id]);
+      await api.post(`/api/communities/join/${id}`);
       setCommunities((prev) =>
         prev.map((c) =>
           c.community_id === id
-            ? { ...c, member_count: c.member_count + 1 }
+            ? { ...c, joined: true, member_count: c.member_count + 1 }
             : c
         )
       );
-    } catch (err) {
-      console.error('Failed to join community', err);
+    } catch (err: any) {
+      // 409 means already a member, so just mark it as joined
+      if (err.response?.status === 409) {
+        setCommunities((prev) =>
+          prev.map((c) => (c.community_id === id ? { ...c, joined: true } : c))
+        );
+      } else {
+        setError(err.response?.data?.error || 'Failed to join community');
+      }
     }
   };
 
@@ -40,6 +52,7 @@ const CommunityPage = () => {
     <div className="pt-24">
       <Header />
       <h1 className="px-6 text-3xl font-bold mb-6 text-white">Communities</h1>
+      {error && <p className="px-6 text-red-400 mb-4">{error}</p>}
       <div className="px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {communities.map((community) => (
           <div
@@ -50,14 +63,14 @@ const CommunityPage = () => {
             <p className="text-sm text-gray-300">Members: {community.member_count}</p>
             <button
               onClick={() => joinCommunity(community.community_id)}
-              disabled={joined.includes(community.community_id)}
+              disabled={community.joined}
               className={`mt-4 px-4 py-2 rounded-full font-medium transition-all ${
-                joined.includes(community.community_id)
+                community.joined
                   ? 'bg-gray-500 cursor-not-allowed'
                   : 'bg-[#FFD700] text-black hover:shadow-[0_0_10px_#FFD700]'
               }`}
             >
-              {joined.includes(community.community_id) ? 'Joined' : 'Join'}
+              {community.joined ? 'Joined' : 'Join'}
             </button>
           </div>
         ))}

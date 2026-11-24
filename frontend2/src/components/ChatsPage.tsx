@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Header from './Header';
+import api from '../api';
 
 interface ChatMessage {
   id: number;
@@ -19,39 +20,39 @@ const ChatsPage: React.FC = () => {
   const [error, setError] = useState('');
 
   const fetchMessages = async () => {
-    try {
-      const res = await axios.get('http://localhost:5000/api/chats');
-      setMessages(res.data);
-    } catch (err) {
-      setError('Failed to load messages');
-    }
-  };
+  try {
+    const res = await api.get('/api/chats');
+    setMessages(res.data);
+  } catch (err) {
+    setError('Failed to load messages');
+  }
+};
 
-  useEffect(() => {
+// Poll every 5s so new messages appear without a refresh
+useEffect(() => {
+  fetchMessages();
+  const id = setInterval(fetchMessages, 5000);
+  return () => clearInterval(id);
+}, []);
+
+const handleSend = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!newMessage.trim()) return;
+
+  const formData = new FormData();
+  formData.append('message', newMessage);
+  if (mediaFile) formData.append('media', mediaFile);
+
+  try {
+    await api.post('/api/chats', formData);
+    setNewMessage('');
+    setMediaFile(null);
+    setError('');
     fetchMessages();
-  }, []);
-
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const email = localStorage.getItem('userEmail');
-    if (!email || !newMessage.trim()) return;
-
-    const formData = new FormData();
-    formData.append('email', email);
-    formData.append('message', newMessage);
-    if (mediaFile) formData.append('media', mediaFile);
-
-    try {
-      await axios.post('http://localhost:5000/api/chats', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setNewMessage('');
-      setMediaFile(null);
-      fetchMessages();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to send message');
-    }
-  };
+  } catch (err: any) {
+    setError(err.response?.data?.error || 'Failed to send message');
+  }
+};
 
   return (
     <div className="min-h-screen pt-10 pb-20">

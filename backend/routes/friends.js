@@ -1,10 +1,11 @@
-const express = require('express');
-const router = express.Router();
-const friendsController = require('../controllers/friendsController');
+const router = require('express').Router();
+const auth = require('../middleware/auth');
+const c = require('../controllers/friendsController');
 
-router.post('/send', friendsController.sendFriendRequest);
-router.get('/requests/:user_id', friendsController.getPendingRequests);
-router.post('/accept', friendsController.acceptFriendRequest);
-router.post('/decline', friendsController.declineFriendRequest);
+router.use(auth);
+router.post('/send', c.sendFriendRequest);
+router.get('/requests', c.getPendingRequests);
+router.post('/accept', c.acceptFriendRequest);
+router.post('/decline', c.declineFriendRequest);
 
 module.exports = router;

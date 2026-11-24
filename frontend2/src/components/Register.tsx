@@ -1,9 +1,14 @@
 // src/RegisterPage.tsx
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
 import Header from './Header';
+interface College {
+  collegeid: number;
+  college_name: string;
+}
+
 interface FormData {
   fullname: string;
   reg_no: string;
@@ -28,6 +33,17 @@ const RegisterPage: React.FC = () => {
     email: '',
     password: ''
   });
+  const [colleges, setColleges] = useState<College[]>([]);
+
+  // colleges come from the DB so the user can only pick an id that exists
+  // (user.collegeid is a foreign key to college.collegeid)
+  useEffect(() => {
+    axios
+      .get<College[]>('http://localhost:5000/api/auth/colleges')
+      .then((res) => setColleges(res.data))
+      .catch(() => alert('Could not load the college list. Please try again.'));
+  }, []);
+
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -58,6 +74,7 @@ const RegisterPage: React.FC = () => {
                 type="text"
                 id="fullname"
                 name="fullname"
+                maxLength={50}
                 value={form.fullname}
                 onChange={handleChange}
                 className="w-full bg-white/10 border border-gray-600 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#FFD700]"
@@ -71,6 +88,7 @@ const RegisterPage: React.FC = () => {
                 type="text"
                 id="reg_no"
                 name="reg_no"
+                maxLength={20}
                 value={form.reg_no}
                 onChange={handleChange}
                 className="w-full bg-white/10 border border-gray-600 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#FFD700]"
@@ -114,18 +132,24 @@ const RegisterPage: React.FC = () => {
             </div>
             
             <div>
-              <label htmlFor="collegeid" className="block text-white mb-2">College ID</label>
-              <input
-                type="text"
+              <label htmlFor="collegeid" className="block text-white mb-2">College</label>
+              <select
                 id="collegeid"
                 name="collegeid"
                 value={form.collegeid}
                 onChange={handleChange}
                 className="w-full bg-white/10 border border-gray-600 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#FFD700]"
                 required
-              />
+              >
+                <option value="" className="text-black">Select College</option>
+                {colleges.map((c) => (
+                  <option key={c.collegeid} value={c.collegeid} className="text-black">
+                    {c.college_name}
+                  </option>
+                ))}
+              </select>
             </div>
-            
+
             <div>
               <label htmlFor="gender" className="block text-white mb-2">Gender</label>
               <select
@@ -140,7 +164,7 @@ const RegisterPage: React.FC = () => {
                 <option value="male" className="text-black">Male</option>
                 <option value="female" className="text-black">Female</option>
                 <option value="other" className="text-black">Other</option>
-                <option value="prefer_not_to_say" className="text-black">Prefer not to say</option>
+                <option value="not_say" className="text-black">Prefer not to say</option>
               </select>
             </div>
             

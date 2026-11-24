@@ -1,67 +1,39 @@
 const db = require('../models/db');
-const path = require('path');
-const fs = require('fs');
+const { removeUploaded } = require('../middleware/upload');
 
-const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)){
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
+exports.createPost = async (req, res) => {
+  const content = typeof req.body.content === 'string' ? req.body.content.trim() : '';
 
-exports.createPost = (req, res) => {
-  const { content, email } = req.body;
-  let media_url = null;
-
-  if (req.file) {
-    media_url = `/uploads/${req.file.filename}`;
+  if (!content || content.length > 2000) {
+    removeUploaded(req.file);
+    return res.status(400).json({ error: 'Content is required (max 2000 characters)' });
   }
-  console.log('Received post request:', { content, email });
 
-  if (!content || !email) {
-    return res.status(400).json({ error: 'Content and email are required' });
+  const media_url = req.file ? `/uploads/${req.file.filename}` : null;
+  try {
+    const [result] = await db.query('INSERT INTO posts (user_id, content, media_url) VALUES (?, ?, ?)', [
+      req.user.id,
+      content,
+      media_url,
+    ]);
+    res.status(201).json({ message: 'Post created successfully', post_id: result.insertId, media_url });
+  } catch (err) {
+    removeUploaded(req.file);
+    throw err;
   }
-  const userQuery = 'SELECT id FROM user WHERE email = ?';
-  db.query(userQuery, [email], (err, userResults) => {
-    if (err) {
-      console.error('Error finding user:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-
-    if (userResults.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const user_id = userResults[0].id;
-    const query = 'INSERT INTO posts (user_id, content,media_url) VALUES (?, ?,?)';
-    
-    db.query(query, [user_id, content, media_url], (err, results) => {
-      if (err) {
-        console.error('Error creating post:', err);
-        return res.status(500).json({ error: 'Error creating post' });
-      }
-      res.status(201).json({ 
-        message: 'Post created successfully',
-        post_id: results.insertId,
-        media_url: media_url
-      });
-    });
-  });
 };
-exports.getPosts = (req, res) => {
-  const query = `
-    SELECT 
-      p.*,
-      u.fullname,
-      u.email 
-    FROM posts p 
-    JOIN user u ON p.user_id = u.id 
-    ORDER BY p.created_at DESC
-  `;
-  
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching posts:', err);
-      return res.status(500).json({ error: 'Database error while fetching posts' });
-    }
-    res.status(200).json(results);
-  });
+
+exports.getPosts = async (req, res) => {
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 50);
+  const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+
+  const [rows] = await db.query(
+    `SELECT p.*, u.fullname
+     FROM posts p
+     JOIN user u ON p.user_id = u.id
+     ORDER BY p.created_at DESC, p.post_id DESC
+     LIMIT ? OFFSET ?`,
+    [limit, offset]
+  );
+  res.json(rows);
 };

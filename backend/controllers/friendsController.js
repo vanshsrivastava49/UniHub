@@ -1,116 +1,63 @@
-const pool = require('../models/db');
+const db = require('../models/db');
+
+const toId = (v) => (Number.isInteger(Number(v)) && Number(v) > 0 ? Number(v) : null);
 
 exports.sendFriendRequest = async (req, res) => {
-    const { user_id, friend_user_id } = req.body;
-  
-    if (!user_id || !friend_user_id) {
-      return res.status(400).json({ message: 'User ID and Friend User ID are required' });
-    }
-  
-    try {
-      const [existing] = await pool.query(
-        'SELECT * FROM friends WHERE user_id = ? AND friend_user_id = ?',
-        [user_id, friend_user_id]
-      );
-  
-      if (existing.length > 0) {
-        return res.status(400).json({ message: 'Friend request already sent or exists' });
-      }
-      await pool.query(
-        'INSERT INTO friends (user_id, friend_user_id, status) VALUES (?, ?, ?)',
-        [user_id, friend_user_id, 'pending']
-      );
-  
-      res.status(200).json({ message: 'Friend request sent' });
-    } catch (err) {
-      console.error('Error sending friend request:', err);
-      res.status(500).json({ message: 'Server error' });
-    }
-  };
+  const me = req.user.id;
+  const target = toId(req.body.friend_user_id);
+
+  if (!target) return res.status(400).json({ error: 'Valid friend_user_id is required' });
+  if (target === me) return res.status(400).json({ error: 'You cannot send a request to yourself' });
+
+  const [users] = await db.query('SELECT id FROM user WHERE id = ?', [target]);
+  if (users.length === 0) return res.status(404).json({ error: 'User not found' });
+
+  // Check both directions (A->B or B->A)
+  const [existing] = await db.query(
+    `SELECT friend_id FROM friends
+     WHERE (user_id = ? AND friend_user_id = ?) OR (user_id = ? AND friend_user_id = ?)`,
+    [me, target, target, me]
+  );
+  if (existing.length > 0) {
+    return res.status(409).json({ error: 'A friend request or friendship already exists' });
+  }
+
+  await db.query("INSERT INTO friends (user_id, friend_user_id, status) VALUES (?, ?, 'pending')", [me, target]);
+  res.status(201).json({ message: 'Friend request sent' });
+};
 
 exports.getPendingRequests = async (req, res) => {
-  const { user_id } = req.params;
-
-  if (!user_id) {
-    return res.status(400).json({ message: 'User ID is required' });
-  }
-
-  try {
-    const [requests] = await pool.query(
-      `SELECT f.friend_id, u.id as sender_id, u.fullname, u.email, u.reg_no
-       FROM friends f
-       JOIN user u ON f.user_id = u.id
-       WHERE f.friend_user_id = ? AND f.status = 'pending'`,
-      [user_id]
-    );
-
-    if (requests.length === 0) {
-      return res.status(404).json({ message: 'No pending friend requests found' });
-    }
-
-    res.json(requests);
-  } catch (err) {
-    console.error("Error fetching friend requests:", err);
-    res.status(500).json({ message: 'Server error' });
-  }
+  const [rows] = await db.query(
+    `SELECT f.friend_id, u.id AS sender_id, u.fullname, u.reg_no
+     FROM friends f
+     JOIN user u ON f.user_id = u.id
+     WHERE f.friend_user_id = ? AND f.status = 'pending'`,
+    [req.user.id]
+  );
+  res.json(rows); // empty array is a valid result, not a 404
 };
 
-// Accept a friend request
+// Only the recipient of a request may accept or decline it
 exports.acceptFriendRequest = async (req, res) => {
-  const { friend_id } = req.body;
+  const friendId = toId(req.body.friend_id);
+  if (!friendId) return res.status(400).json({ error: 'Valid friend_id is required' });
 
-  if (!friend_id) {
-    return res.status(400).json({ message: 'Friend ID is required' });
-  }
-
-  try {
-    const [existingRequest] = await pool.query(
-      'SELECT * FROM friends WHERE friend_id = ? AND status = "pending"',
-      [friend_id]
-    );
-
-    if (existingRequest.length === 0) {
-      return res.status(404).json({ message: 'Friend request not found or already accepted' });
-    }
-
-    await pool.query(
-      'UPDATE friends SET status = "accepted" WHERE friend_id = ?',
-      [friend_id]
-    );
-
-    res.json({ message: 'Friend request accepted' });
-  } catch (err) {
-    console.error("Error accepting friend request:", err);
-    res.status(500).json({ message: 'Server error' });
-  }
+  const [result] = await db.query(
+    "UPDATE friends SET status = 'accepted' WHERE friend_id = ? AND friend_user_id = ? AND status = 'pending'",
+    [friendId, req.user.id]
+  );
+  if (result.affectedRows === 0) return res.status(404).json({ error: 'Friend request not found' });
+  res.json({ message: 'Friend request accepted' });
 };
 
-// Decline a friend request
 exports.declineFriendRequest = async (req, res) => {
-  const { friend_id } = req.body;
+  const friendId = toId(req.body.friend_id);
+  if (!friendId) return res.status(400).json({ error: 'Valid friend_id is required' });
 
-  if (!friend_id) {
-    return res.status(400).json({ message: 'Friend ID is required' });
-  }
-
-  try {
-    const [existingRequest] = await pool.query(
-      'SELECT * FROM friends WHERE friend_id = ? AND status = "pending"',
-      [friend_id]
-    );
-
-    if (existingRequest.length === 0) {
-      return res.status(404).json({ message: 'Friend request not found' });
-    }
-
-    await pool.query(
-      'DELETE FROM friends WHERE friend_id = ?',
-      [friend_id]
-    );
-
-    res.json({ message: 'Friend request declined' });
-  } catch (err) {
-    console.error("Error declining friend request:", err);
-    res.status(500).json({ message: 'Server error' });
-  }
+  const [result] = await db.query(
+    "DELETE FROM friends WHERE friend_id = ? AND friend_user_id = ? AND status = 'pending'",
+    [friendId, req.user.id]
+  );
+  if (result.affectedRows === 0) return res.status(404).json({ error: 'Friend request not found' });
+  res.json({ message: 'Friend request declined' });
 };

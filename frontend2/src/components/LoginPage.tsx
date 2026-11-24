@@ -4,22 +4,23 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
 import Header  from './Header';
+import api from '../api';
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
-      localStorage.setItem('userEmail', email);
-      alert('Login successful');
-      navigate('/dashboard'); // or home page
-    } catch (error: any) {
-      alert('Login failed: ' + (error.response?.data?.error || 'Unknown error'));
-    }
-  };
+const handleSubmit = async (e: FormEvent) => {
+  e.preventDefault();
+  try {
+    const res = await api.post('/api/auth/login', { email, password });
+    localStorage.setItem('token', res.data.token);
+    localStorage.setItem('role', res.data.role);
+    navigate('/dashboard');
+  } catch (error: any) {
+    alert('Login failed: ' + (error.response?.data?.error || 'Unknown error'));
+  }
+};
 
   return (
     <div><Header/>

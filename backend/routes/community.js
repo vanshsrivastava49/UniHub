@@ -1,8 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const communityController = require('../controllers/communityController');
+const router = require('express').Router();
+const auth = require('../middleware/auth');
+const c = require('../controllers/communityController');
 
-// Route for getting all communities
-router.get('/', communityController.getAllCommunities);
+router.use(auth);
+router.get('/', c.getAllCommunities);
+router.post('/join/:id', c.joinCommunity);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Header from './Header';
+import api from '../api';
 
 interface Post {
   post_id: number;
@@ -24,60 +25,36 @@ const PostsPage: React.FC = () => {
   }, []);
 
   const fetchPosts = async () => {
-    try {
-      const email = localStorage.getItem('userEmail');
-      const response = await axios.get('http://localhost:5000/api/posts');
-      setPosts(response.data);
-    } catch (err) {
-      setError('Failed to load posts');
-      console.error('Error fetching posts:', err);
-    }
-  };
+  try {
+    const response = await api.get('/api/posts');
+    setPosts(response.data);
+  } catch (err) {
+    setError('Failed to load posts');
+  }
+};
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const email = localStorage.getItem('userEmail');
-      if (!email) {
-        setError('Please login to create a post');
-        return;
-      }
-  
-      if (!newPost.trim()) {
-        setError('Post content cannot be empty');
-        return;
-      }
-  
-      // Create FormData object
-      const formData = new FormData();
-      formData.append('content', newPost);
-      formData.append('email', email);
-      
-      if (mediaFile) {
-        formData.append('media', mediaFile);
-      }
-  
-      // Use formData in the request and set correct headers
-      const response = await axios.post('http://localhost:5000/api/posts', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-  
-      if (response.status === 201) {
-        setNewPost('');
-        setMediaFile(null);
-        setError(null);
-        // Reset file input
-        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
-        fetchPosts(); // Refresh the posts list
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to create post');
-      console.error('Error creating post:', err);
-    }
-  };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!newPost.trim()) {
+    setError('Post content cannot be empty');
+    return;
+  }
+  try {
+    const formData = new FormData();
+    formData.append('content', newPost);
+    if (mediaFile) formData.append('media', mediaFile);
+
+    await api.post('/api/posts', formData); // axios sets the multipart boundary itself
+    setNewPost('');
+    setMediaFile(null);
+    setError(null);
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+    fetchPosts();
+  } catch (err: any) {
+    setError(err.response?.data?.error || 'Failed to create post');
+  }
+};
 
   return (
     <div className="min-h-screen pt-10 pb-20">

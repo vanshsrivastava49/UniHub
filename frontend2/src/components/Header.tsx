@@ -9,19 +9,26 @@ import {
   Calendar,
   Users,
   FileText,
+  Trophy,
+  PlusCircle,
+  ShieldCheck,
 } from 'lucide-react';
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
+  // Read once per render; the value is set at login
+  const role = localStorage.getItem('role');
+  const isLoggedIn = !!localStorage.getItem('token');
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = searchQuery.trim();
-    if (trimmed.startsWith('RA') && trimmed.length <= 15) {
+    if (/^[A-Za-z0-9]{3,20}$/.test(trimmed)) {
       navigate(`/search/${trimmed}`);
     } else {
-      alert('Enter a valid RA number (starting with RA and 14 characters total)');
+      alert('Enter a valid registration number (letters and digits only)');
     }
   };
 
@@ -39,7 +46,16 @@ const Header = () => {
               <NavLink icon={<Users className="w-5 h-5" />} text="Community" to="/community" />
               <NavLink icon={<MessageSquare className="w-5 h-5" />} text="Messages" to="/chats" />
               <NavLink icon={<FileText className="w-5 h-5" />} text="Posts" to="/posts" />
+              <NavLink icon={<Trophy className="w-5 h-5" />} text="Team Finder" to="/team-finder" />
               <NavLink icon={<User className="w-5 h-5" />} text="Profile" to="/dashboard" />
+
+              {/* Role-based links */}
+              {isLoggedIn && role === 'staff' && (
+                <NavLink icon={<PlusCircle className="w-5 h-5" />} text="Add Event" to="/staff/events" />
+              )}
+              {isLoggedIn && role === 'admin' && (
+                <NavLink icon={<ShieldCheck className="w-5 h-5" />} text="Approve Events" to="/admin/events" />
+              )}
             </nav>
           </div>
 
@@ -82,7 +98,7 @@ const Header = () => {
 const NavLink = ({ icon, text, to }: { icon: React.ReactNode; text: string; to: string }) => (
   <Link
     to={to}
-    className="flex items-center space-x-2 text-gray-200 hover:text-white transition-colors group"
+    className="flex items-center space-x-2 text-gray-200 hover:text-white transition-colors group whitespace-nowrap"
   >
     {icon}
     <span className="group-hover:text-[#FFD700]">{text}</span>

@@ -1,53 +1,41 @@
 const db = require('../models/db');
-const path = require('path');
-const fs = require('fs');
+const { removeUploaded } = require('../middleware/upload');
 
-const chatUploadsDir = path.join(__dirname, '../uploads/chats');
-if (!fs.existsSync(chatUploadsDir)) {
-    fs.mkdirSync(chatUploadsDir, { recursive: true });
-}
+exports.sendMessage = async (req, res) => {
+  const message = typeof req.body.message === 'string' ? req.body.message.trim() : '';
 
-exports.sendMessage = (req, res) => {
-  const { email, message } = req.body;
-  let media_url = null;
-
-  if (!email || !message) {
-    return res.status(400).json({ error: 'Email and message are required' });
+  if ((!message && !req.file) || message.length > 2000) {
+    removeUploaded(req.file);
+    return res.status(400).json({ error: 'A message (max 2000 characters) or media is required' });
   }
 
-  if (req.file) {
-    media_url = `/uploads/chats/${req.file.filename}`;
+  const media_url = req.file ? `/uploads/chats/${req.file.filename}` : null;
+  try {
+    const [result] = await db.query('INSERT INTO chatsss (user_id, message, media_url) VALUES (?, ?, ?)', [
+      req.user.id,
+      message,
+      media_url,
+    ]);
+    res.status(201).json({ message: 'Message sent', chat_id: result.insertId, media_url });
+  } catch (err) {
+    removeUploaded(req.file);
+    throw err;
   }
-
-  const getUserQuery = 'SELECT id FROM user WHERE email = ?';
-  db.query(getUserQuery, [email], (err, userRes) => {
-    if (err || userRes.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const user_id = userRes[0].id;
-    const insertQuery = `INSERT INTO chatsss (user_id, message, media_url) VALUES (?, ?, ?)`;
-    db.query(insertQuery, [user_id, message, media_url], (err, result) => {
-      if (err) return res.status(500).json({ error: 'Failed to send message' });
-
-      res.status(201).json({
-        message: 'Message sent',
-        chat_id: result.insertId,
-        media_url
-      });
-    });
-  });
 };
 
-exports.getMessages = (req, res) => {
-  const query = `
-    SELECT c.*, u.fullname, u.email
-    FROM chatsss c
-    JOIN user u ON c.user_id = u.id
-    ORDER BY c.created_at ASC
-  `;
-  db.query(query, (err, results) => {
-    if (err) return res.status(500).json({ error: 'Error fetching messages' });
-    res.status(200).json(results);
-  });
+// Returns the most recent N messages (oldest first), not the whole history
+exports.getMessages = async (req, res) => {
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 200);
+  const [rows] = await db.query(
+    `SELECT * FROM (
+       SELECT c.id, c.user_id, c.message, c.media_url, c.created_at, u.fullname
+       FROM chatsss c
+       JOIN user u ON c.user_id = u.id
+       ORDER BY c.created_at DESC, c.id DESC
+       LIMIT ?
+     ) recent
+     ORDER BY created_at ASC, id ASC`,
+    [limit]
+  );
+  res.json(rows);
 };

@@ -1,36 +1,20 @@
 const db = require('../models/db');
 
-exports.searchUserByRegNo = (req, res) => {
-  const reg_no = req.params.reg_no;
-
-  if (!reg_no) {
-    return res.status(400).json({ error: 'Registration number is required' });
+exports.searchUserByRegNo = async (req, res) => {
+  const reg_no = (req.params.reg_no || '').trim();
+  if (!/^[A-Za-z0-9]{3,20}$/.test(reg_no)) {
+    return res.status(400).json({ error: 'Invalid registration number' });
   }
 
-  const query = `
-    SELECT 
-      u.reg_no, 
-      u.fullname, 
-      u.email, 
-      u.course, 
-      u.enrolledyear, 
-      u.gender,
-      c.college_name, 
-      c.address
-    FROM user u
-    JOIN college c ON u.collegeid = c.collegeid
-    WHERE u.reg_no = ?`;
-
-  db.query(query, [reg_no], (err, results) => {
-    if (err) {
-      console.error('Database error while searching user:', err);
-      return res.status(500).json({ error: 'Database error while searching user' });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    res.status(200).json(results[0]);
-  });
+  // Email is intentionally not returned: any logged-in user can search, so it would expose everyone's email.
+  const [rows] = await db.query(
+    `SELECT u.id, u.reg_no, u.fullname, u.course, u.enrolledyear, u.gender,
+            c.college_name, c.address
+     FROM user u
+     JOIN college c ON u.collegeid = c.collegeid
+     WHERE u.reg_no = ?`,
+    [reg_no]
+  );
+  if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
+  res.json(rows[0]);
 };

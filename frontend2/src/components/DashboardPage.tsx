@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Header from "./Header";
+import api from '../api';
 
 interface User {
   id: string;
@@ -19,20 +20,14 @@ const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      try {
-        const email = localStorage.getItem('userEmail');
-        if (!email) {
-          setError('User email not found. Please login again.');
-          return;
-        }
-
-        const res = await axios.get(`http://localhost:5000/api/dashboard/users?email=${email}`);
-        setUser(res.data);
-      } catch (err) {
-        console.error('Failed to fetch user data:', err);
-        setError('Failed to load user data. Please try again later.');
-      }
-    };
+  try {
+    const res = await api.get('/api/dashboard/me');
+    setUser(res.data);
+  } catch (err) {
+    console.error('Failed to fetch user data:', err);
+    setError('Failed to load user data. Please try again later.');
+  }
+};
 
     fetchUserData();
   }, []);
